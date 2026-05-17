@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>RouteFlow — Mykonos Transfer Management · by Illusions Tech</title>
+<meta name="description" content="The professional dispatch & GPS tracking platform built exclusively for Mykonos transfer companies. Manage rides, track drivers live, and automate your P&L."/>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%234a7cf7'/><text y='.9em' font-size='65' x='12' font-weight='900' fill='white' font-family='Arial'>RF</text></svg>"/>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+:root{
+  --bg:#03040a;--s1:#080c18;--s2:#0d1425;
+  --card:#111827;--card2:#161e30;
+  --border:#1c2840;--border2:#253350;
+  --blue:#4f8ef7;--blue2:#2563eb;--blueglow:rgba(79,142,247,.18);
+  --cyan:#22d3ee;--gold:#f59e0b;--green:#22c55e;--rose:#f43f5e;--purple:#a855f7;
+  --text:#eef2ff;--sub:#94a3b8;--dim:#1e2d45;
+  --r:14px;--rl:20px;--rxl:28px;
+}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;line-height:1.6;overflow-x:hidden}
+
+/* ─── GRAIN OVERLAY ─── */
+body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:.5}
+
+/* ─── UTILITY ─── */
+.container{max-width:1160px;margin:0 auto;padding:0 1.5rem}
+.tag{display:inline-block;font-size:.68rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--blue);background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.25);border-radius:20px;padding:.28rem .9rem;margin-bottom:1rem}
+.serif{font-family:'Instrument Serif',serif}
+h2.display{font-family:'Instrument Serif',serif;font-size:clamp(2.2rem,4.5vw,3.6rem);font-weight:400;line-height:1.1;letter-spacing:-.02em;margin-bottom:1rem}
+h2.display em{font-style:italic;color:var(--blue)}
+.lead{font-size:1.05rem;color:var(--sub);line-height:1.75;max-width:540px;margin-bottom:2.5rem}
+hr.fade{border:none;height:1px;background:linear-gradient(90deg,transparent,var(--border2),transparent);margin:0}
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:.5rem;padding:.8rem 1.7rem;border-radius:10px;font-size:.9rem;font-weight:600;text-decoration:none;cursor:pointer;border:none;transition:all .22s;letter-spacing:.01em}
+.btn-primary{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;box-shadow:0 4px 24px var(--blueglow)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 36px var(--blueglow)}
+.btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border2)}
+.btn-ghost:hover{border-color:var(--blue);color:var(--blue);transform:translateY(-2px)}
+
+/* ─── NAV ─── */
+nav{position:fixed;inset:0 0 auto;z-index:500;padding:.9rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;background:rgba(3,4,10,.8);backdrop-filter:blur(22px);border-bottom:1px solid var(--border)}
+.nav-brand{display:flex;align-items:center;gap:.65rem;text-decoration:none}
+.nav-mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--blue),var(--blue2));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.78rem;color:#fff;box-shadow:0 0 18px var(--blueglow);flex-shrink:0}
+.nav-name{font-family:'Instrument Serif',serif;font-size:1.1rem;letter-spacing:.01em}
+.nav-name small{display:block;font-family:'DM Sans',sans-serif;font-size:.58rem;font-style:normal;color:var(--sub);letter-spacing:.12em;text-transform:uppercase;line-height:1}
+.nav-links{display:flex;align-items:center;gap:1.75rem;list-style:none}
+.nav-links a{color:var(--sub);font-size:.85rem;font-weight:500;text-decoration:none;transition:color .18s}
+.nav-links a:hover{color:var(--text)}
+.nav-cta{padding:.45rem 1.1rem;background:var(--blue);color:#fff;border-radius:8px;font-weight:600;font-size:.82rem;text-decoration:none;transition:all .2s}
+.nav-cta:hover{background:var(--blue2);transform:translateY(-1px)}
+
+/* ─── HERO ─── */
+.hero{position:relative;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8rem 1.5rem 4rem;text-align:center;overflow:hidden}
+/* Animated gradient mesh */
+.hero-mesh{position:absolute;inset:0;z-index:0;pointer-events:none}
+.mesh-blob{position:absolute;border-radius:50%;filter:blur(120px);animation:drift 18s ease-in-out infinite alternate}
+.mb1{width:700px;height:700px;top:-20%;left:-10%;background:radial-gradient(#1d3a8a,transparent 60%);opacity:.5;animation-duration:22s}
+.mb2{width:600px;height:600px;bottom:-15%;right:-8%;background:radial-gradient(#0e4a6e,transparent 60%);opacity:.4;animation-duration:18s;animation-direction:alternate-reverse}
+.mb3{width:350px;height:350px;top:40%;left:35%;background:radial-gradient(#3b1d8a,transparent 60%);opacity:.25;animation-duration:14s}
+@keyframes drift{0%{transform:translate(0,0) scale(1)}100%{transform:translate(40px,30px) scale(1.08)}}
+/* Grid lines */
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(79,142,247,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(79,142,247,.04) 1px,transparent 1px);background-size:56px 56px;mask-image:radial-gradient(ellipse 75% 75% at 50% 50%,#000 40%,transparent 100%)}
+
+.hero-inner{position:relative;z-index:2;max-width:860px}
+.hero-badge{display:inline-flex;align-items:center;gap:.5rem;padding:.3rem .9rem;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.3);border-radius:20px;font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);margin-bottom:1.75rem}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+h1.hero-h{font-family:'Instrument Serif',serif;font-size:clamp(2.8rem,6.5vw,5.5rem);font-weight:400;line-height:1.06;letter-spacing:-.03em;margin-bottom:1.25rem}
+h1.hero-h em{font-style:italic;background:linear-gradient(135deg,#60a5fa,#22d3ee);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{font-size:clamp(.95rem,1.8vw,1.2rem);color:var(--sub);max-width:580px;margin:0 auto 2.5rem;line-height:1.75}
+.hero-actions{display:flex;gap:.85rem;justify-content:center;flex-wrap:wrap;margin-bottom:4rem}
+/* Stats pills */
+.hero-stats{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap}
+.hstat{background:rgba(255,255,255,.04);border:1px solid var(--border2);border-radius:10px;padding:.6rem 1.2rem;display:flex;align-items:center;gap:.65rem}
+.hstat-val{font-family:'Instrument Serif',serif;font-size:1.5rem;line-height:1}
+.hstat-label{font-size:.7rem;color:var(--sub);text-transform:uppercase;letter-spacing:.08em}
+
+/* ─── DASHBOARD MOCKUP ─── */
+.mockup-wrap{position:relative;z-index:2;max-width:1080px;margin:5rem auto 0;padding:0 1.5rem}
+.mockup-frame{border-radius:18px;border:1px solid var(--border2);overflow:hidden;box-shadow:0 50px 120px rgba(0,0,0,.9),0 0 0 1px rgba(255,255,255,.04)}
+.mock-bar{background:rgba(255,255,255,.04);border-bottom:1px solid var(--border);padding:.65rem 1rem;display:flex;align-items:center;gap:.45rem}
+.mk-dot{width:11px;height:11px;border-radius:50%}
+.mock-url{margin-left:.6rem;background:rgba(255,255,255,.06);border-radius:6px;padding:.2rem .75rem;font-size:.7rem;color:var(--sub);font-family:'JetBrains Mono',monospace;flex:1;max-width:280px}
+.mock-body{display:grid;grid-template-columns:190px 1fr;background:var(--s1)}
+.mock-sb{background:rgba(255,255,255,.02);border-right:1px solid var(--border);padding:1.25rem .85rem;display:flex;flex-direction:column;gap:.2rem}
+.msb-brand{display:flex;align-items:center;gap:.55rem;margin-bottom:1.1rem;padding:.2rem .3rem}
+.msb-mark{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,var(--blue),var(--blue2));display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:800;color:#fff;flex-shrink:0}
+.msb-name{font-size:.78rem;font-weight:600}.msb-sub{font-size:.47rem;color:var(--sub);letter-spacing:.1em;text-transform:uppercase}
+.msb-sec{font-size:.46rem;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);padding:.5rem .4rem .2rem;margin-top:.4rem}
+.msb-item{display:flex;align-items:center;gap:.45rem;padding:.35rem .4rem;border-radius:6px;font-size:.68rem;color:var(--sub)}
+.msb-item.active{background:rgba(79,142,247,.12);color:var(--blue)}
+.msb-icon{font-size:.7rem;width:13px;text-align:center}
+.mock-main{padding:1.1rem}
+.mm-head{margin-bottom:.9rem}
+.mm-title{font-family:'Instrument Serif',serif;font-size:.9rem}.mm-sub{font-size:.58rem;color:var(--sub)}
+.mm-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:.55rem;margin-bottom:.85rem}
+.mms{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;padding:.6rem .7rem}
+.mms-val{font-family:'Instrument Serif',serif;font-size:1.35rem;line-height:1}
+.mms-lbl{font-size:.5rem;color:var(--sub);letter-spacing:.08em;text-transform:uppercase;margin-top:.15rem}
+.mm-two{display:grid;grid-template-columns:1fr 1fr;gap:.55rem}
+.mm-card{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:.7rem}
+.mmc-title{font-size:.58rem;font-weight:700;color:var(--sub);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.55rem}
+.driver-row{display:flex;align-items:center;gap:.45rem;margin-bottom:.3rem;padding:.25rem;background:rgba(255,255,255,.03);border-radius:5px}
+.dr-av{width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#1d4ed8,#0e1060);display:flex;align-items:center;justify-content:center;font-size:.5rem;font-weight:700;color:#fff;flex-shrink:0}
+.dr-name{font-size:.62rem;flex:1}
+.dr-badge{font-size:.5rem;padding:.08rem .3rem;border-radius:8px}
+.dr-on{background:rgba(34,197,94,.12);color:#4ade80}
+.dr-off{background:rgba(100,116,139,.1);color:var(--sub)}
+.ride-row2{display:flex;align-items:center;gap:.4rem;padding:.25rem 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:.6rem}
+.ride-row2:last-child{border-bottom:none}
+.rr-route{flex:1;color:var(--sub)}
+.rr-price{color:#4ade80;font-weight:700;font-size:.65rem}
+.rr-status{padding:.08rem .3rem;border-radius:8px;font-size:.5rem}
+.rrs-go{background:rgba(251,191,36,.12);color:#fbbf24}
+.rrs-done{background:rgba(34,197,94,.1);color:#4ade80}
+
+/* ─── SECTIONS ─── */
+section{position:relative;z-index:1}
+.sec-pad{padding:6rem 0}
+.sec-center{text-align:center}
+.sec-center .lead{margin-left:auto;margin-right:auto}
+
+/* ─── PROBLEM/SOLUTION ─── */
+.ps-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:3rem}
+.ps-card{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);padding:2rem;position:relative;overflow:hidden}
+.ps-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.ps-card.bad::before{background:linear-gradient(90deg,#ef4444,transparent)}
+.ps-card.good::before{background:linear-gradient(90deg,var(--blue),transparent)}
+.ps-label{font-size:.65rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;margin-bottom:1.1rem}
+.ps-card.bad .ps-label{color:#f87171}
+.ps-card.good .ps-label{color:var(--blue)}
+.ps-list{display:flex;flex-direction:column;gap:.85rem}
+.ps-item{display:flex;gap:.75rem;align-items:flex-start;font-size:.9rem;line-height:1.55}
+.ps-icon{font-size:1rem;flex-shrink:0;margin-top:.1rem}
+
+/* ─── FEATURES ─── */
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;margin-top:3rem}
+.feat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);padding:1.75rem;transition:border-color .25s,transform .25s;position:relative;overflow:hidden}
+.feat-card::after{content:'';position:absolute;top:0;right:0;width:140px;height:140px;background:radial-gradient(var(--blueglow),transparent 70%);pointer-events:none;opacity:0;transition:opacity .3s}
+.feat-card:hover{border-color:var(--border2);transform:translateY(-4px)}
+.feat-card:hover::after{opacity:1}
+.feat-ico{width:46px;height:46px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin-bottom:1.1rem}
+.fi-b{background:rgba(79,142,247,.12)} .fi-c{background:rgba(34,211,238,.1)} .fi-g{background:rgba(245,158,11,.1)} .fi-gr{background:rgba(34,197,94,.1)} .fi-p{background:rgba(168,85,247,.1)} .fi-r{background:rgba(244,63,94,.1)}
+.feat-title{font-size:1rem;font-weight:700;margin-bottom:.5rem}
+.feat-desc{font-size:.85rem;color:var(--sub);line-height:1.65}
+.feat-tag{display:inline-block;margin-top:.85rem;font-size:.65rem;font-weight:600;color:var(--blue);letter-spacing:.08em}
+
+/* ─── HOW IT WORKS ─── */
+.steps-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1.1rem;margin-top:3rem;position:relative}
+.steps-row::before{content:'';position:absolute;top:28px;left:12%;right:12%;height:1px;background:linear-gradient(90deg,transparent,var(--border2),var(--border2),transparent)}
+.step-card{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);padding:1.75rem 1.4rem;text-align:center;position:relative;z-index:1;transition:border-color .25s,transform .25s}
+.step-card:hover{border-color:var(--blue);transform:translateY(-4px)}
+.step-num{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--blue2));display:flex;align-items:center;justify-content:center;font-family:'Instrument Serif',serif;font-size:1.4rem;color:#fff;margin:0 auto 1.1rem;box-shadow:0 4px 20px var(--blueglow)}
+.step-title{font-weight:700;font-size:.95rem;margin-bottom:.5rem}
+.step-desc{font-size:.82rem;color:var(--sub);line-height:1.65}
+
+/* ─── GPS SECTION ─── */
+.gps-wrap{background:linear-gradient(135deg,rgba(79,142,247,.07),rgba(34,211,238,.04));border:1px solid rgba(79,142,247,.2);border-radius:var(--rxl);padding:3.5rem;display:grid;grid-template-columns:1fr 1fr;gap:3.5rem;align-items:center;margin-top:3rem}
+
+/* Phone mockup */
+.phone-outer{display:flex;justify-content:center;position:relative}
+.phone{width:218px;background:#080c18;border-radius:38px;border:3px solid #1a2535;padding:1.6rem .9rem 1.4rem;box-shadow:0 30px 80px rgba(0,0,0,.7),inset 0 0 0 1px rgba(255,255,255,.04);position:relative}
+.phone-notch{width:76px;height:7px;background:#1a2535;border-radius:4px;margin:0 auto .8rem}
+.phone-screen{background:#030409;border-radius:18px;padding:1rem .85rem}
+.p-logo{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,var(--blue),var(--blue2));display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:800;color:#fff;margin:0 auto .45rem;box-shadow:0 0 14px var(--blueglow)}
+.p-title{font-size:.68rem;font-weight:700;text-align:center;margin-bottom:.1rem}
+.p-sub{font-size:.52rem;color:var(--sub);text-align:center;margin-bottom:.75rem}
+.p-ring{width:78px;height:78px;border-radius:50%;border:2.5px solid var(--green);box-shadow:0 0 0 6px rgba(34,197,94,.1);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:.4rem auto;animation:rpulse 2.5s ease-in-out infinite}
+@keyframes rpulse{0%,100%{box-shadow:0 0 0 6px rgba(34,197,94,.1)}50%{box-shadow:0 0 0 14px rgba(34,197,94,.04)}}
+.p-ring-icon{font-size:1.5rem;line-height:1}
+.p-ring-lbl{font-size:.48rem;color:#4ade80;text-transform:uppercase;letter-spacing:.1em}
+.p-stats-row{display:flex;gap:.4rem;margin:.65rem 0}
+.p-stat{flex:1;background:rgba(255,255,255,.04);border-radius:7px;padding:.3rem .2rem;text-align:center}
+.p-stat-val{font-family:'JetBrains Mono',monospace;font-size:.78rem;font-weight:500}
+.p-stat-lbl{font-size:.45rem;color:var(--sub);text-transform:uppercase;letter-spacing:.07em}
+.p-btn{width:100%;background:linear-gradient(135deg,var(--blue),var(--blue2));border:none;border-radius:9px;color:#fff;font-size:.62rem;font-weight:700;padding:.48rem;cursor:pointer;margin-top:.5rem;font-family:'DM Sans',sans-serif}
+/* GPS ping orb */
+.gps-orb{position:absolute;width:12px;height:12px;background:var(--green);border-radius:50%;top:18%;right:-6px}
+.gps-orb::before,.gps-orb::after{content:'';position:absolute;inset:-5px;border-radius:50%;border:2px solid var(--green);opacity:0;animation:gping 2.4s ease-out infinite}
+.gps-orb::after{animation-delay:1.2s}
+@keyframes gping{0%{transform:scale(1);opacity:.7}100%{transform:scale(2.8);opacity:0}}
+
+.gps-points{display:flex;flex-direction:column;gap:1.2rem;margin-top:1.5rem}
+.gps-pt{display:flex;gap:1rem;align-items:flex-start}
+.gps-pt-ico{width:42px;height:42px;border-radius:11px;background:rgba(79,142,247,.1);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.gps-pt-title{font-weight:700;font-size:.92rem;margin-bottom:.25rem}
+.gps-pt-desc{font-size:.83rem;color:var(--sub);line-height:1.6}
+
+/* ─── PRICING ─── */
+.price-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:3rem}
+.price-card{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);padding:2.25rem 2rem;position:relative;overflow:hidden;transition:transform .25s,border-color .25s}
+.price-card:hover{transform:translateY(-5px)}
+.price-card.pop{border-color:var(--blue);box-shadow:0 0 0 1px var(--blue),0 24px 64px rgba(79,142,247,.13)}
+.pop-badge{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.28rem .9rem;border-radius:20px;white-space:nowrap}
+.price-tier{font-size:.65rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--sub);margin-bottom:.75rem}
+.price-row{display:flex;align-items:flex-end;gap:.3rem;margin-bottom:.3rem}
+.price-sym{font-size:1.3rem;font-weight:600;color:var(--sub);margin-bottom:.35rem}
+.price-num{font-family:'Instrument Serif',serif;font-size:3.6rem;line-height:1;letter-spacing:-.04em}
+.price-period{font-size:.78rem;color:var(--sub);margin-bottom:.5rem}
+.price-save{display:inline-block;background:rgba(34,197,94,.12);color:#4ade80;font-size:.68rem;font-weight:700;padding:.2rem .65rem;border-radius:20px;margin-bottom:1.4rem}
+.price-desc{font-size:.855rem;color:var(--sub);line-height:1.65;margin-bottom:1.75rem;padding-bottom:1.75rem;border-bottom:1px solid var(--border)}
+.price-feats{display:flex;flex-direction:column;gap:.72rem;margin-bottom:2rem}
+.pf{display:flex;align-items:flex-start;gap:.6rem;font-size:.855rem;line-height:1.5}
+.pf-y{color:var(--green)} .pf-n{color:var(--sub)} .pf.dim{opacity:.45}
+.price-btn{width:100%;padding:.85rem;border-radius:9px;font-size:.88rem;font-weight:700;cursor:pointer;letter-spacing:.01em;transition:all .22s;font-family:'DM Sans',sans-serif;border:none}
+.pb-fill{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;box-shadow:0 4px 18px var(--blueglow)}
+.pb-fill:hover{transform:translateY(-1px);box-shadow:0 8px 28px var(--blueglow)}
+.pb-out{background:transparent;color:var(--text);border:1px solid var(--border2) !important}
+.pb-out:hover{border-color:var(--blue) !important;color:var(--blue)}
+
+/* ─── WHY ─── */
+.why-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:3rem}
+.why-item{display:flex;gap:1rem;align-items:flex-start;padding:1.5rem;background:var(--card);border:1px solid var(--border);border-radius:var(--r);transition:border-color .2s}
+.why-item:hover{border-color:var(--border2)}
+.why-ico{width:44px;height:44px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+.wi-title{font-weight:700;font-size:.93rem;margin-bottom:.3rem}
+.wi-desc{font-size:.83rem;color:var(--sub);line-height:1.6}
+
+/* ─── TESTIMONIALS ─── */
+.test-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:3rem}
+.test-card{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);padding:2rem;position:relative}
+.test-quote{font-family:'Instrument Serif',serif;font-size:4.5rem;line-height:.7;color:rgba(79,142,247,.15);position:absolute;top:1.2rem;left:1.5rem;pointer-events:none}
+.test-stars{color:var(--gold);font-size:.8rem;margin-bottom:.5rem}
+.test-text{font-size:.9rem;color:#cbd5e1;line-height:1.75;margin-bottom:1.5rem;position:relative;z-index:1;padding-top:.6rem}
+.test-author{display:flex;align-items:center;gap:.75rem}
+.test-av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;color:#fff;flex-shrink:0}
+.test-name{font-weight:700;font-size:.88rem}
+.test-role{font-size:.75rem;color:var(--sub)}
+
+/* ─── ROADMAP ─── */
+.roadmap-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;margin-top:3rem}
+.rm-item{display:flex;gap:1rem;align-items:flex-start;padding:1.4rem;background:var(--card);border:1px solid var(--border);border-radius:var(--r)}
+.rm-ico{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+.rm-badge{display:inline-block;font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.15rem .5rem;border-radius:8px;margin-bottom:.3rem}
+.rb-done{background:rgba(34,197,94,.12);color:#4ade80} .rb-next{background:rgba(79,142,247,.12);color:var(--blue)} .rb-soon{background:rgba(245,158,11,.1);color:var(--gold)}
+.rm-title{font-weight:700;font-size:.9rem;margin-bottom:.25rem}
+.rm-desc{font-size:.8rem;color:var(--sub);line-height:1.6}
+
+/* ─── FAQ ─── */
+.faq-list{max-width:700px;margin:3rem auto 0}
+.faq-item{border-bottom:1px solid var(--border)}
+.faq-btn{width:100%;background:none;border:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.95rem;font-weight:600;text-align:left;padding:1.4rem 0;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:1rem;transition:color .2s}
+.faq-btn:hover{color:var(--blue)}
+.faq-arr{font-size:1.1rem;color:var(--sub);transition:transform .28s,color .2s;flex-shrink:0}
+.faq-item.open .faq-arr{transform:rotate(45deg);color:var(--blue)}
+.faq-ans{font-size:.875rem;color:var(--sub);line-height:1.8;padding-bottom:1.4rem;display:none}
+.faq-item.open .faq-ans{display:block}
+.faq-ans code{font-family:'JetBrains Mono',monospace;color:var(--blue);font-size:.82rem;background:rgba(79,142,247,.08);padding:.1rem .35rem;border-radius:4px}
+
+/* ─── CTA ─── */
+.cta-box{background:linear-gradient(135deg,#0a1628,#0c1f3a);border:1px solid var(--border2);border-radius:var(--rxl);padding:5.5rem 3rem;text-align:center;position:relative;overflow:hidden}
+.cta-box::before{content:'';position:absolute;width:700px;height:400px;top:-200px;left:50%;transform:translateX(-50%);background:radial-gradient(var(--blue2),transparent 55%);opacity:.15;pointer-events:none}
+.cta-title{font-family:'Instrument Serif',serif;font-size:clamp(2rem,4vw,3rem);line-height:1.1;margin-bottom:.9rem;position:relative}
+.cta-title em{font-style:italic;color:var(--blue)}
+.cta-sub{font-size:1rem;color:var(--sub);margin-bottom:2.25rem;position:relative}
+.cta-actions{display:flex;gap:.85rem;justify-content:center;flex-wrap:wrap;position:relative}
+.contact-strip{display:flex;align-items:center;justify-content:center;gap:1.5rem;margin-top:1.75rem;flex-wrap:wrap;position:relative}
+.contact-item{display:flex;align-items:center;gap:.5rem;font-size:.84rem;color:var(--sub)}
+.contact-item a{color:var(--blue);text-decoration:none}
+.contact-item a:hover{text-decoration:underline}
+
+/* ─── FOOTER ─── */
+footer{border-top:1px solid var(--border);padding:2.5rem 1.5rem;position:relative;z-index:1}
+.foot-inner{max-width:1160px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.foot-brand{display:flex;align-items:center;gap:.7rem}
+.foot-copy{font-size:.78rem;color:var(--sub)}
+.foot-links{display:flex;gap:1.5rem;list-style:none}
+.foot-links a{font-size:.78rem;color:var(--sub);text-decoration:none;transition:color .18s}
+.foot-links a:hover{color:var(--text)}
+
+/* ─── SCROLL ANIMATIONS ─── */
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .65s cubic-bezier(.22,1,.36,1),transform .65s cubic-bezier(.22,1,.36,1)}
+.reveal.in{opacity:1;transform:translateY(0)}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:960px){
+  .feat-grid,.steps-row,.price-grid{grid-template-columns:repeat(2,1fr)}
+  .ps-grid,.gps-wrap,.test-grid{grid-template-columns:1fr}
+  .mock-body{grid-template-columns:1fr}
+  .mock-sb{display:none}
+  .steps-row::before{display:none}
+  .roadmap-grid{grid-template-columns:1fr}
+  .price-grid{max-width:380px;margin-left:auto;margin-right:auto}
+}
+@media(max-width:640px){
+  .nav-links{display:none}
+  .feat-grid,.steps-row{grid-template-columns:1fr}
+  .why-grid{grid-template-columns:1fr}
+  .cta-box{padding:3rem 1.5rem}
+  .gps-wrap{padding:2rem 1.5rem}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-brand">
+    <div class="nav-mark">RF</div>
+    <div class="nav-name">RouteFlow <small>by Illusions Tech</small></div>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#how-it-works">How It Works</a></li>
+    <li><a href="#gps">Live GPS</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#faq">FAQ</a></li>
+  </ul>
+  <a href="#pricing" class="nav-cta">Get Started →</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-mesh">
+    <div class="mesh-blob mb1"></div>
+    <div class="mesh-blob mb2"></div>
+    <div class="mesh-blob mb3"></div>
+  </div>
+  <div class="hero-grid"></div>
+  <div class="hero-inner">
+    <div class="hero-badge"><div class="live-dot"></div>Built for Mykonos · Season 2026</div>
+    <h1 class="hero-h">The smarter way to run<br>your <em>Mykonos transfers</em></h1>
+    <p class="hero-sub">RouteFlow replaces WhatsApp groups and paper notebooks with a professional dispatch dashboard — live GPS, smart pricing, and real driver P&L. Built exclusively for the island.</p>
+    <div class="hero-actions">
+      <a href="#pricing" class="btn btn-primary">🚗 Start Free Trial</a>
+      <a href="#how-it-works" class="btn btn-ghost">See How It Works</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hstat"><div class="hstat-val">25</div><div class="hstat-label">Mykonos locations</div></div>
+      <div class="hstat"><div class="hstat-val serif" style="color:var(--green)">5s</div><div class="hstat-label">GPS update rate</div></div>
+      <div class="hstat"><div class="hstat-val">∞</div><div class="hstat-label">Rides per day</div></div>
+      <div class="hstat"><div class="hstat-val serif" style="color:var(--blue)">€0</div><div class="hstat-label">Hardware needed</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- DASHBOARD MOCKUP -->
+<div class="mockup-wrap reveal">
+  <div class="mockup-frame">
+    <div class="mock-bar">
+      <div class="mk-dot" style="background:#ff5f57"></div>
+      <div class="mk-dot" style="background:#ffbd2e"></div>
+      <div class="mk-dot" style="background:#28ca42"></div>
+      <div class="mock-url">192.168.1.1:5001 — RouteFlow by Illusions Tech</div>
+    </div>
+    <div class="mock-body">
+      <div class="mock-sb">
+        <div class="msb-brand">
+          <div class="msb-mark">RF</div>
+          <div><div class="msb-name">RouteFlow</div><div class="msb-sub">by Illusions Tech</div></div>
+        </div>
+        <div class="msb-sec">Operations</div>
+        <div class="msb-item active"><span class="msb-icon">⬛</span>Dashboard</div>
+        <div class="msb-item"><span class="msb-icon">🚗</span>Rides</div>
+        <div class="msb-item"><span class="msb-icon">🗺</span>Live Map</div>
+        <div class="msb-item"><span class="msb-icon">👤</span>Drivers</div>
+        <div class="msb-sec">Finance</div>
+        <div class="msb-item"><span class="msb-icon">📊</span>Reports & P&L</div>
+        <div class="msb-item"><span class="msb-icon">💶</span>Pricing</div>
+      </div>
+      <div class="mock-main">
+        <div class="mm-head">
+          <div class="mm-title">Good evening, Admin ✦</div>
+          <div class="mm-sub">Sunday 17 May · 22:05</div>
+        </div>
+        <div class="mm-stats">
+          <div class="mms"><div class="mms-val" style="color:var(--blue)">14</div><div class="mms-lbl">Rides Today</div></div>
+          <div class="mms"><div class="mms-val" style="color:#4ade80">€560</div><div class="mms-lbl">Revenue</div></div>
+          <div class="mms"><div class="mms-val" style="color:#fbbf24">3</div><div class="mms-lbl">In Progress</div></div>
+          <div class="mms"><div class="mms-val" style="color:#a78bfa">5</div><div class="mms-lbl">Drivers</div></div>
+        </div>
+        <div class="mm-two">
+          <div class="mm-card">
+            <div class="mmc-title">Driver Status</div>
+            <div class="driver-row"><div class="dr-av">NK</div><div class="dr-name">Nikos K.</div><div class="dr-badge dr-on">Active</div></div>
+            <div class="driver-row"><div class="dr-av">GM</div><div class="dr-name">Giorgos M.</div><div class="dr-badge dr-on">Active</div></div>
+            <div class="driver-row"><div class="dr-av">PD</div><div class="dr-name">Petros D.</div><div class="dr-badge dr-off">Idle</div></div>
+          </div>
+          <div class="mm-card">
+            <div class="mmc-title">Today's Rides</div>
+            <div class="ride-row2"><div class="rr-route">Airport → Ornos</div><div class="rr-price">€22</div><div class="rr-status rrs-go">Live</div></div>
+            <div class="ride-row2"><div class="rr-route">Old Port → Psarou</div><div class="rr-price">€28</div><div class="rr-status rrs-done">Done</div></div>
+            <div class="ride-row2"><div class="rr-route">Town → Elia Beach</div><div class="rr-price">€35</div><div class="rr-status rrs-done">Done</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="fade" style="margin:5rem auto;max-width:1160px"/>
+
+<!-- PROBLEM / SOLUTION -->
+<section id="why">
+  <div class="container sec-pad">
+    <div class="sec-center">
+      <div class="tag">The Reality</div>
+      <h2 class="display">Running Mykonos transfers<br>shouldn't be <em>this hard</em></h2>
+      <p class="lead">WhatsApp groups, paper logs, guessing where your drivers are. It works — until a missed pickup costs you a client. There is a better way.</p>
+    </div>
+    <div class="ps-grid reveal">
+      <div class="ps-card bad">
+        <div class="ps-label">Without RouteFlow</div>
+        <div class="ps-list">
+          <div class="ps-item"><span class="ps-icon">😤</span><span>Rides confirmed on WhatsApp — messages get buried and forgotten</span></div>
+          <div class="ps-item"><span class="ps-icon">📋</span><span>Paper logbooks and Excel files that are always a day behind reality</span></div>
+          <div class="ps-item"><span class="ps-icon">🤷</span><span>No idea where your drivers are unless you call them mid-ride</span></div>
+          <div class="ps-item"><span class="ps-icon">💸</span><span>No clear picture of what each driver actually earns after fuel costs</span></div>
+          <div class="ps-item"><span class="ps-icon">🔁</span><span>Double bookings and missed pickups that destroy your reputation</span></div>
+        </div>
+      </div>
+      <div class="ps-card good">
+        <div class="ps-label">With RouteFlow</div>
+        <div class="ps-list">
+          <div class="ps-item"><span class="ps-icon">✅</span><span>Every ride logged digitally — driver, route, time, passenger, price</span></div>
+          <div class="ps-item"><span class="ps-icon">🗺</span><span>Live GPS pins on a Mykonos map — see every driver in real time</span></div>
+          <div class="ps-item"><span class="ps-icon">📱</span><span>Drivers share location from their phone browser — zero hardware</span></div>
+          <div class="ps-item"><span class="ps-icon">📊</span><span>Monthly P&L per driver: revenue, fuel cost, and net profit — automatic</span></div>
+          <div class="ps-item"><span class="ps-icon">🎯</span><span>25 Mykonos locations with real road distances and auto-pricing</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features" style="background:linear-gradient(180deg,transparent,rgba(79,142,247,.025),transparent)">
+  <div class="container sec-pad">
+    <div class="tag">Features</div>
+    <h2 class="display">Everything your<br><em>operation needs</em></h2>
+    <p class="lead">Not a generic taxi app — every feature was designed specifically for Mykonos: the island's locations, roads, season, and pricing customs.</p>
+    <div class="feat-grid reveal">
+      <div class="feat-card">
+        <div class="feat-ico fi-b">🗺</div>
+        <div class="feat-title">Live GPS Tracking</div>
+        <div class="feat-desc">Drivers share their location from any smartphone browser — no app install, no AirTag, no hardware. See every driver as a live pin on a Mykonos map, updating every 5 seconds.</div>
+        <div class="feat-tag">→ No hardware required</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-ico fi-c">🚗</div>
+        <div class="feat-title">Smart Ride Dispatch</div>
+        <div class="feat-desc">Book a ride, pick up and drop off. RouteFlow instantly shows the real road distance, drive time in normal traffic and busy season, and the suggested price. One click to confirm.</div>
+        <div class="feat-tag">→ Distances for all 25 locations</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-ico fi-g">📊</div>
+        <div class="feat-title">Driver P&L Reports</div>
+        <div class="feat-desc">Every month, see exactly what each driver earned, what their fuel cost, and their net profit — all calculated automatically from the ride data you already enter.</div>
+        <div class="feat-tag">→ Revenue minus fuel = profit</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-ico fi-gr">📍</div>
+        <div class="feat-title">25 Mykonos Locations</div>
+        <div class="feat-desc">New Port, Old Port, Airport, Town, all south beaches (Ornos, Psarou, Platis Gialos, Paradise, Super Paradise, Elia…), north coast, and east Mykonos — all built in.</div>
+        <div class="feat-tag">→ Real island road distances</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-ico fi-p">💶</div>
+        <div class="feat-title">Zone-Based Pricing</div>
+        <div class="feat-desc">Set your prices by zone (port → south, airport → town, etc.) with an automatic night surcharge for rides between 22:00 and 06:00. Prices fill in automatically when booking.</div>
+        <div class="feat-tag">→ Night surcharge built in</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-ico fi-r">📈</div>
+        <div class="feat-title">Revenue Analytics</div>
+        <div class="feat-desc">30-day revenue chart, busiest pickup hours, most popular routes, and month-over-month comparison. Real data that helps you make smarter decisions next season.</div>
+        <div class="feat-tag">→ 30-day rolling charts</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how-it-works">
+  <div class="container sec-pad">
+    <div class="sec-center">
+      <div class="tag">How It Works</div>
+      <h2 class="display">Up and running<br>in <em>15 minutes</em></h2>
+      <p class="lead" style="margin:0 auto">No IT department, no server setup, no training course. If you can double-click a file, you can run RouteFlow.</p>
+    </div>
+    <div class="steps-row reveal">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <div class="step-title">Download & Launch</div>
+        <div class="step-desc">Download RouteFlow, double-click <code style="font-family:'JetBrains Mono',monospace;color:var(--blue);font-size:.78rem">run_routeflow.bat</code>, open your browser. No installer, no database setup.</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <div class="step-title">Add Your Drivers</div>
+        <div class="step-desc">Create a driver profile with name, vehicle, plate and fuel consumption. Takes 2 minutes per driver. Set active or inactive by season.</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <div class="step-title">Book Rides</div>
+        <div class="step-desc">Select pickup and dropoff location. Distance, drive time, and price fill automatically. Assign driver, confirm, done.</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">4</div>
+        <div class="step-title">Track Live & Report</div>
+        <div class="step-desc">Send GPS links to drivers, watch them move on the map, mark rides complete, and pull monthly P&L reports with one click.</div>
+      </div>
+    </div>
+
+    <!-- How-to steps visual -->
+    <div class="reveal" style="margin-top:3.5rem;background:var(--card);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden">
+      <div style="padding:1.25rem 1.75rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.75rem">
+        <div style="width:10px;height:10px;border-radius:50%;background:#ff5f57"></div>
+        <div style="width:10px;height:10px;border-radius:50%;background:#ffbd2e"></div>
+        <div style="width:10px;height:10px;border-radius:50%;background:#28ca42"></div>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--sub);margin-left:.5rem">How to book a ride — step by step</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0">
+        <div style="padding:1.75rem;border-right:1px solid var(--border)">
+          <div style="font-size:.65rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--blue);margin-bottom:.75rem">Step 1 · Select Route</div>
+          <div style="background:var(--s2);border:1px solid var(--border);border-radius:9px;padding:.85rem;font-size:.8rem">
+            <div style="display:flex;gap:.5rem;margin-bottom:.55rem">
+              <div style="flex:1"><div style="font-size:.58rem;color:var(--sub);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.25rem">From</div><div style="background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.3);border-radius:6px;padding:.4rem .6rem;font-size:.75rem">✈ Airport (JMK)</div></div>
+              <div style="flex:1"><div style="font-size:.58rem;color:var(--sub);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.25rem">To</div><div style="background:var(--dim);border:1px solid var(--border);border-radius:6px;padding:.4rem .6rem;font-size:.75rem;color:var(--sub)">Select…</div></div>
+            </div>
+            <div style="font-size:.7rem;color:var(--sub);text-align:center">▼ Ornos Beach</div>
+          </div>
+          <div style="margin-top:.85rem;background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.2);border-radius:8px;padding:.75rem;font-size:.78rem;color:var(--sub)">
+            ↔ <strong style="color:var(--blue)">6.8 km</strong> &nbsp;·&nbsp; 12 min normal &nbsp;·&nbsp; 19 min busy season
+          </div>
+        </div>
+        <div style="padding:1.75rem;border-right:1px solid var(--border)">
+          <div style="font-size:.65rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--blue);margin-bottom:.75rem">Step 2 · Assign & Price</div>
+          <div style="display:flex;flex-direction:column;gap:.5rem;font-size:.8rem">
+            <div><div style="font-size:.58rem;color:var(--sub);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.25rem">Driver</div><div style="background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:.4rem .6rem">👤 Nikos K. — Mercedes Vito</div></div>
+            <div><div style="font-size:.58rem;color:var(--sub);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.25rem">Price (€)</div><div style="background:var(--s2);border:1px solid rgba(79,142,247,.3);border-radius:6px;padding:.4rem .6rem;color:var(--blue);font-weight:700">€22.00 <span style="font-size:.65rem;color:var(--sub);font-weight:400">(auto-filled)</span></div></div>
+            <div><div style="font-size:.58rem;color:var(--sub);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.25rem">Passenger</div><div style="background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:.4rem .6rem">👤 Klevin Sadiku</div></div>
+          </div>
+        </div>
+        <div style="padding:1.75rem">
+          <div style="font-size:.65rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--blue);margin-bottom:.75rem">Step 3 · Track & Complete</div>
+          <div style="display:flex;flex-direction:column;gap:.55rem">
+            <div style="display:flex;align-items:center;gap:.65rem;padding:.55rem .75rem;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:7px;font-size:.78rem">
+              <div style="width:8px;height:8px;border-radius:50%;background:var(--green);animation:blink 2s infinite;flex-shrink:0"></div>
+              Ride in progress — driver on map
+            </div>
+            <div style="display:flex;align-items:center;gap:.65rem;padding:.55rem .75rem;background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.2);border-radius:7px;font-size:.78rem">
+              📍 GPS: 37.4261, 25.3199 · 38 km/h
+            </div>
+            <button style="width:100%;padding:.6rem;background:linear-gradient(135deg,var(--blue),var(--blue2));border:none;border-radius:8px;color:#fff;font-size:.78rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">
+              ✓ Mark Complete → €22 earned
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- GPS SECTION -->
+<section id="gps" style="background:rgba(34,211,238,.015)">
+  <div class="container sec-pad">
+    <div class="gps-wrap reveal">
+      <div class="phone-outer">
+        <div class="phone">
+          <div class="phone-notch"></div>
+          <div class="phone-screen">
+            <div class="p-logo">RF</div>
+            <div class="p-title">RouteFlow</div>
+            <div class="p-sub">by Illusions Tech</div>
+            <div class="p-ring">
+              <div class="p-ring-icon">🚗</div>
+              <div class="p-ring-lbl">Sharing</div>
+            </div>
+            <div class="p-stats-row">
+              <div class="p-stat"><div class="p-stat-val" style="color:#4ade80">42</div><div class="p-stat-lbl">km/h</div></div>
+              <div class="p-stat"><div class="p-stat-val" style="color:var(--blue)">±4m</div><div class="p-stat-lbl">accuracy</div></div>
+              <div class="p-stat"><div class="p-stat-val" style="color:#a78bfa">128</div><div class="p-stat-lbl">updates</div></div>
+            </div>
+            <div style="font-size:.52rem;color:var(--sub);text-align:center;margin:.5rem 0">Last: 37.43502, 25.31874</div>
+            <button class="p-btn">⏹ Stop Sharing</button>
+          </div>
+        </div>
+        <div class="gps-orb"></div>
+      </div>
+      <div>
+        <div class="tag">Live GPS Tracking</div>
+        <h2 class="display" style="font-size:2.3rem">Your drivers on<br>the map. <em>Right now.</em></h2>
+        <div class="gps-points">
+          <div class="gps-pt">
+            <div class="gps-pt-ico">📱</div>
+            <div>
+              <div class="gps-pt-title">No hardware. No app. Just a link.</div>
+              <div class="gps-pt-desc">You send the driver a link via WhatsApp. They open it in their browser, tap "Start Sharing" — their pin appears live on your map. Works on any iPhone or Android.</div>
+            </div>
+          </div>
+          <div class="gps-pt">
+            <div class="gps-pt-ico">⚡</div>
+            <div>
+              <div class="gps-pt-title">Faster than AirTag. Much faster.</div>
+              <div class="gps-pt-desc">AirTag updates every few minutes. RouteFlow updates every 5 seconds — you see the driver moving in real time. Speed, accuracy, coordinates — all visible.</div>
+            </div>
+          </div>
+          <div class="gps-pt">
+            <div class="gps-pt-ico">🔒</div>
+            <div>
+              <div class="gps-pt-title">Driver stays in control.</div>
+              <div class="gps-pt-desc">One tap to start, one tap to stop. No background tracking. No battery drain when the page is closed. Drivers choose when to share.</div>
+            </div>
+          </div>
+          <div class="gps-pt">
+            <div class="gps-pt-ico">🌐</div>
+            <div>
+              <div class="gps-pt-title">Works anywhere on Mykonos.</div>
+              <div class="gps-pt-desc">On the Cloud plan, GPS works from anywhere — Elia, Ano Mera, Agios Stefanos. Not just your WiFi network.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY ILLUSIONS TECH -->
+<section>
+  <div class="container sec-pad">
+    <div class="sec-center">
+      <div class="tag">Why Illusions Tech</div>
+      <h2 class="display">Built by someone<br>who knows <em>the island</em></h2>
+      <p class="lead" style="margin:0 auto">RouteFlow isn't a generic SaaS product with a Greek flag on it. Every location, every distance, every price rule was built for Mykonos specifically.</p>
+    </div>
+    <div class="why-grid reveal">
+      <div class="why-item">
+        <div class="why-ico fi-b">🏝</div>
+        <div><div class="wi-title">Mykonos-native, not Mykonos-adapted</div><div class="wi-desc">Every road distance is calibrated for the island's actual road network. Every location is a real pickup point that Mykonos operators use daily.</div></div>
+      </div>
+      <div class="why-item">
+        <div class="why-ico fi-gr">⚡</div>
+        <div><div class="wi-title">One tool for everything</div><div class="wi-desc">GPS, dispatch, pricing, drivers, analytics — all in one dashboard. No integrations, no connecting 5 different services, no monthly per-seat fees.</div></div>
+      </div>
+      <div class="why-item">
+        <div class="why-ico fi-g">🛠</div>
+        <div><div class="wi-title">Direct support from the developer</div><div class="wi-desc">When something doesn't work, you message the person who wrote the code. Not a ticket system. Not an FAQ page. The actual developer.</div></div>
+      </div>
+      <div class="why-item">
+        <div class="why-ico fi-p">🔄</div>
+        <div><div class="wi-title">Updated every season</div><div class="wi-desc">RouteFlow improves every year based on real feedback from operators. Your subscription includes every future update, forever.</div></div>
+      </div>
+      <div class="why-item">
+        <div class="why-ico fi-c">💻</div>
+        <div><div class="wi-title">Your data, your control</div><div class="wi-desc">On local plans, data lives on your own computer — not on a foreign server. On the cloud plan, it's backed up daily by us and accessible anywhere.</div></div>
+      </div>
+      <div class="why-item">
+        <div class="why-ico fi-r">📱</div>
+        <div><div class="wi-title">Designed for tablet dispatch</div><div class="wi-desc">Mount a tablet at the front desk and run the full dashboard. The interface adapts perfectly to tablet screen size — ideal for busy season dispatch.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section style="background:linear-gradient(180deg,transparent,rgba(79,142,247,.02),transparent)">
+  <div class="container sec-pad">
+    <div class="sec-center">
+      <div class="tag">Testimonials</div>
+      <h2 class="display">What Mykonos<br><em>operators say</em></h2>
+    </div>
+    <div class="test-grid reveal">
+      <div class="test-card">
+        <div class="test-quote">"</div>
+        <div class="test-stars">★★★★★</div>
+        <div class="test-text">Before RouteFlow we managed everything on WhatsApp and a whiteboard. Now I see all 6 drivers on a map and know exactly what each one earned this month. Game changer.</div>
+        <div class="test-author">
+          <div class="test-av" style="background:linear-gradient(135deg,#1d4ed8,#4f1d96)">DK</div>
+          <div><div class="test-name">Dimitris K.</div><div class="test-role">Transfer Company Owner, Mykonos</div></div>
+        </div>
+      </div>
+      <div class="test-card">
+        <div class="test-quote">"</div>
+        <div class="test-stars">★★★★★</div>
+        <div class="test-text">The GPS tracking is incredible. My clients ask where the driver is and I open the map and tell them he's 3 minutes away on the road to Ornos. That's professional service.</div>
+        <div class="test-author">
+          <div class="test-av" style="background:linear-gradient(135deg,#0e7490,#1d4ed8)">KP</div>
+          <div><div class="test-name">Kostas P.</div><div class="test-role">Fleet Dispatcher, South Mykonos</div></div>
+        </div>
+      </div>
+      <div class="test-card">
+        <div class="test-quote">"</div>
+        <div class="test-stars">★★★★★</div>
+        <div class="test-text">The pricing zones saved me hours every week. I set them once and every ride gets the right price automatically — including the night surcharge. Finally a system that thinks like we do.</div>
+        <div class="test-author">
+          <div class="test-av" style="background:linear-gradient(135deg,#92400e,#b45309)">MV</div>
+          <div><div class="test-name">Maria V.</div><div class="test-role">Hotel Transfer Coordinator</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMING SOON / ROADMAP -->
+<section id="roadmap">
+  <div class="container sec-pad">
+    <div class="sec-center">
+      <div class="tag">Roadmap</div>
+      <h2 class="display">What's <em>coming next</em></h2>
+      <p class="lead" style="margin:0 auto">RouteFlow is actively developed. Every subscriber gets updates as they ship.</p>
+    </div>
+    <div class="roadmap-grid reveal">
+      <div class="rm-item">
+        <div class="rm-ico fi-gr">✅</div>
+        <div>
+          <div class="rm-badge rb-done">Live Now</div>
+          <div class="rm-title">Live GPS Driver Tracking</div>
+          <div class="rm-desc">Share a link, driver opens on phone, live pin on Mykonos map. No hardware.</div>
+        </div>
+      </div>
+      <div class="rm-item">
+        <div class="rm-ico fi-gr">✅</div>
+        <div>
+          <div class="rm-badge rb-done">Live Now</div>
+          <div class="rm-title">Driver P&L with Fuel Costs</div>
+          <div class="rm-desc">Monthly profit per driver, auto-calculated from ride data and fuel settings.</div>
+        </div>
+      </div>
+      <div class="rm-item">
+        <div class="rm-ico fi-b">🔜</div>
+        <div>
+          <div class="rm-badge rb-next">Coming Soon</div>
+          <div class="rm-title">SMS Passenger Notifications</div>
+          <div class="rm-desc">Automatic SMS to passenger when driver is assigned and when they're 5 min away.</div>
+        </div>
+      </div>
+      <div class="rm-item">
+        <div class="rm-ico fi-b">🔜</div>
+        <div>
+          <div class="rm-badge rb-next">Coming Soon</div>
+          <div class="rm-title">Online Booking Form</div>
+          <div class="rm-desc">A shareable link for clients to book their own transfer — routes to your dashboard automatically.</div>
+        </div>
+      </div>
+      <div class="rm-item">
+        <div class="rm-ico fi-g">💡</div>
+        <div>
+          <div class="rm-badge rb-soon">Planned</div>
+          <div class="rm-title">Mobile App for Drivers</div>
+          <div class="rm-desc">Dedicated iOS/Android app with push notifications for assigned rides.</div>
+        </div>
+      </div>
+      <div class="rm-item">
+        <div class="rm-ico fi-g">💡</div>
+        <div>
+          <div class="rm-badge rb-soon">Planned</div>
+          <div class="rm-title">Stripe Payment Integration</div>
+          <div class="rm-desc">Accept card payments through the dispatch interface — receipts emailed automatically.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing" style="background:linear-gradient(180deg,transparent,rgba(79,142,247,.02),transparent)">
+  <div class="container sec-pad">
+    <div class="sec-center">
+      <div class="tag">Pricing</div>
+      <h2 class="display">Simple, <em>honest</em> pricing</h2>
+      <p class="lead" style="margin:0 auto">No per-seat fees. No hidden add-ons. One price covers your whole operation — every driver, every ride, every feature.</p>
+    </div>
+    <div class="price-grid reveal">
+
+      <!-- Monthly -->
+      <div class="price-card">
+        <div class="price-tier">Monthly</div>
+        <div class="price-row"><span class="price-sym">€</span><span class="price-num">15</span></div>
+        <div class="price-period">per month, cancel any time</div>
+        <div class="price-desc">Perfect for testing RouteFlow or smaller operations that run only during peak season.</div>
+        <div class="price-feats">
+          <div class="pf"><span class="pf-y">✓</span><span>Unlimited rides & drivers</span></div>
+          <div class="pf"><span class="pf-y">✓</span><span>Live GPS tracking</span></div>
+          <div class="pf"><span class="pf-y">✓</span><span>All 25 Mykonos locations</span></div>
+          <div class="pf"><span class="pf-y">✓</span><span>Revenue & P&L reports</span></div>
+          <div class="pf"><span class="pf-y">✓</span><span>Zone pricing & night surcharge</span></div>
+          <div class="pf dim"><span class="pf-n">✗</span><span>Priority support</span></div>
+          <div class="pf dim"><span class="pf-n">✗</span><span>Cloud hosting (GPS anywhere)</span></div>
+        </div>
+        <button class="price-btn pb-out" onclick="contact()">Get Started</button>
+      </div>
+
+      <!-- Yearly — Popular -->
+      <div class="price-card pop">
+        <div class="pop-badge">⭐ Most Popular</div>
+        <div class="price-tier">Yearly</div>
+        <div class="price-row"><span class="price-sym">€</span><span class="price-num">120</span></div>
+        <div class="price-period">per year · billed once annually</div>
+        <div class="price-save">Save €60 vs monthly</div>
+        <div class="price-desc">The smart choice for serious operators. Covers the full season and off-season. Always on the latest version.</div>
+        <div class="price-feats">
+          <div class="pf"><span class="pf-y">✓</span><span>Everything in Monthly</span></div>
+          <div class="pf"><span class="pf-y">✓</span><span>Priority WhatsApp support</span></div>
+          <div class="pf"><span class="pf-y">✓</span><span>All future updates included</span></div>
+          <div class="pf"><span class="pf-y">✓</span><span>Remote setup assistance</span></div>
+          <div class="pf"><span class="pf-y">✓</span><span>Custom pricing configuration</span></div>
+          <div class="pf dim"><span class="pf-n">✗</span><span>Cloud hosting (GPS anywhere)</span></div>
+        </div>
+        <button class="price-btn pb-fill" onclick="contact()">🚗 Get RouteFlow Yearly</button>
+      </div>
+
+      <!-- Cloud -->
+      <div class="price-card">
+        <div class="price-tier">Cloud + Yearly</div>
+        <div class="price-row"><span class="price-sym">€</span><span class="price-num">199</span></div>
+        <div class="price-period">per year · hosting included</div>
+        <div class="price-save">GPS works from anywhere on island</div>
+        <div class="price-desc">We host RouteFlow on a secure HTTPS server — GPS tracking works everywhere on Mykonos, not just your WiFi.</div>
+        <div class="price-feats">
+          <div class="pf"><span class="pf-y">✓</span><span>Everything in Yearly</span></div>
+          <div class="pf"><span class="pf-y">✓</span><span>HTTPS cloud hosting by us</span></div>
+          <div class="pf"><span class="pf-y">✓</span><span>GPS works on mobile data</span></div>
+          <div class="pf"><span class="pf-y">✓</span><span>Automatic daily backups</span></div>
+          <div class="pf"><span class="pf-y">✓</span><span>Your own domain (optional)</span></div>
+          <div class="pf"><span class="pf-y">✓</span><span>Uptime monitoring</span></div>
+        </div>
+        <button class="price-btn pb-out" onclick="contact()">Get Cloud Plan</button>
+      </div>
+
+    </div>
+    <div style="text-align:center;margin-top:1.75rem;font-size:.85rem;color:var(--sub)">
+      All plans include a <strong style="color:var(--text)">14-day free trial</strong>. No credit card required. &nbsp;·&nbsp;
+      Questions? <a href="mailto:illusions.tech.gr@gmail.com" style="color:var(--blue);text-decoration:none">illusions.tech.gr@gmail.com</a>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="container sec-pad">
+    <div class="sec-center">
+      <div class="tag">FAQ</div>
+      <h2 class="display">Common <em>questions</em></h2>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item open">
+        <button class="faq-btn" onclick="toggleFaq(this)">Do my drivers need to install an app?<span class="faq-arr">+</span></button>
+        <div class="faq-ans">No. Drivers receive a link (via WhatsApp, SMS, anything) and open it in their phone browser. They tap "Start Sharing Location" — they appear live on your map. No download, no account, no setup. Works on Safari (iPhone) and Chrome (Android).</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-btn" onclick="toggleFaq(this)">Why does GPS say "Location access denied"?<span class="faq-arr">+</span></button>
+        <div class="faq-ans">Browsers require a secure (HTTPS) connection before allowing GPS. On the local plans, GPS works only when drivers are on your WiFi network. To use GPS from anywhere on Mykonos — including mobile data — you need the Cloud plan, which gives you a real HTTPS address.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-btn" onclick="toggleFaq(this)">Can I run it on a tablet at the front desk?<span class="faq-arr">+</span></button>
+        <div class="faq-ans">Absolutely. RouteFlow is designed to work tablet-first. Run it on a laptop, open the browser on your iPad or Android tablet on the same WiFi, and you have a full dispatch screen. The layout adapts automatically to the screen size.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-btn" onclick="toggleFaq(this)">Where is my data stored?<span class="faq-arr">+</span></button>
+        <div class="faq-ans">On the Monthly and Yearly plans, your data is stored in a file on your own computer. It never touches any external server. On the Cloud plan, data is stored on a private secure server managed by Illusions Tech, with automatic daily backups.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-btn" onclick="toggleFaq(this)">Can I add my own company logo?<span class="faq-arr">+</span></button>
+        <div class="faq-ans">Yes. Drop your logo files into the <code>static/images/</code> folder and they appear automatically in the sidebar and dashboard header. No code changes needed. Supports PNG and SVG formats.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-btn" onclick="toggleFaq(this)">What if I need a location that's not in the list?<span class="faq-arr">+</span></button>
+        <div class="faq-ans">Contact us and we'll add it in the next update — usually within a few days. On Yearly and Cloud plans we can also add custom locations for specific hotels, villas, or private pickup zones unique to your operation.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-btn" onclick="toggleFaq(this)">Is there a contract or lock-in?<span class="faq-arr">+</span></button>
+        <div class="faq-ans">None. Monthly plan is month-to-month — cancel any time. Yearly plan is billed once per year with a 14-day money-back trial. Cloud plan setup is covered in the first year's fee, renewable annually.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-btn" onclick="toggleFaq(this)">What happens to my data if I stop subscribing?<span class="faq-arr">+</span></button>
+        <div class="faq-ans">On local plans, your data is on your computer — it's yours forever regardless of subscription status. On the cloud plan, we'll give you a full data export before any cancellation so you never lose your ride history.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section>
+  <div class="container sec-pad" style="padding-top:0">
+    <div class="cta-box reveal">
+      <h2 class="cta-title">Ready to run your transfers<br>like a <em>professional?</em></h2>
+      <p class="cta-sub">Join Mykonos operators using RouteFlow this season. 14-day free trial, no card required.</p>
+      <div class="cta-actions">
+        <a href="mailto:illusions.tech.gr@gmail.com" class="btn btn-primary">📧 Contact Illusions Tech</a>
+        <a href="#pricing" class="btn btn-ghost">View Pricing</a>
+      </div>
+      <div class="contact-strip">
+        <div class="contact-item">📧 <a href="mailto:illusions.tech.gr@gmail.com">illusions.tech.gr@gmail.com</a></div>
+        <div class="contact-item">📍 Based in Mykonos, Greece</div>
+        <div class="contact-item">💬 WhatsApp support available</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="foot-inner">
+    <div class="foot-brand">
+      <div class="nav-mark">RF</div>
+      <div>
+        <div style="font-weight:600;font-size:.9rem">RouteFlow</div>
+        <div style="font-size:.7rem;color:var(--sub)">by Illusions Tech · kl666v</div>
+      </div>
+    </div>
+    <div class="foot-copy">© 2026 Illusions Tech · All rights reserved · Mykonos, Greece</div>
+    <ul class="foot-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="#faq">FAQ</a></li>
+      <li><a href="mailto:illusions.tech.gr@gmail.com">Contact</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+function toggleFaq(btn){
+  const item=btn.closest('.faq-item');
+  const wasOpen=item.classList.contains('open');
+  document.querySelectorAll('.faq-item').forEach(i=>i.classList.remove('open'));
+  if(!wasOpen)item.classList.add('open');
+}
+
+function contact(){
+  window.location.href='mailto:illusions.tech.gr@gmail.com?subject=RouteFlow Inquiry';
+}
+
+// Scroll reveal
+const io=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(!e.isIntersecting)return;
+    e.target.classList.add('in');
+    const children=[...e.target.querySelectorAll('.feat-card,.step-card,.price-card,.test-card,.why-item,.rm-item,.ps-card,.driver-row,.ride-row2')];
+    children.forEach((c,i)=>{
+      c.style.opacity='0';
+      c.style.transform='translateY(16px)';
+      setTimeout(()=>{
+        c.style.transition='opacity .5s ease,transform .5s ease';
+        c.style.opacity='1';
+        c.style.transform='translateY(0)';
+      },i*70);
+    });
+    io.unobserve(e.target);
+  });
+},{threshold:.08,rootMargin:'0px 0px -40px 0px'});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+// Nav active links
+window.addEventListener('scroll',()=>{
+  const y=window.pageYOffset;
+  document.querySelectorAll('section[id]').forEach(s=>{
+    const t=s.offsetTop-110;
+    const l=document.querySelector(`.nav-links a[href="#${s.id}"]`);
+    if(l) l.style.color=y>=t&&y<t+s.offsetHeight?'var(--text)':'';
+  });
+},{passive:true});
+</script>
+</body>
+</html>
